@@ -92,12 +92,13 @@ async function run() {
     });
     // get all billing-list
     app.get("/billing-list", verifyJWT, async (req, res) => {
+      const pageNumber = Number(req.query.pageNumber);
       const query = {};
       const cursor = billingListCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
     });
-    // post all billing-list
+    // post  billing-list
     app.post("/billing-list", verifyJWT, async (req, res) => {
       const billingInfo = req.body;
       const result = await billingListCollection.insertOne(billingInfo);
@@ -134,7 +135,7 @@ run().catch(console.dir);
 
 // routing setup
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("server is running");
 });
 
 app.listen(port, () => {
