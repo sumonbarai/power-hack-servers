@@ -103,6 +103,22 @@ async function run() {
       const result = await billingListCollection.insertOne(billingInfo);
       res.send(result);
     });
+    // patch all billing-list
+    app.patch("/billing-list/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const updateData = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: updateData,
+      };
+      const result = await billingListCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
     // delete billing-list
     app.delete("/billing-list/:id", verifyJWT, async (req, res) => {
       const id = req.params;
