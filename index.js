@@ -2,7 +2,7 @@ const express = require("express");
 require("dotenv").config();
 const app = express();
 var cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 9000;
 // middleware
@@ -101,6 +101,13 @@ async function run() {
     app.post("/billing-list", verifyJWT, async (req, res) => {
       const billingInfo = req.body;
       const result = await billingListCollection.insertOne(billingInfo);
+      res.send(result);
+    });
+    // delete billing-list
+    app.delete("/billing-list/:id", verifyJWT, async (req, res) => {
+      const id = req.params;
+      const query = { _id: ObjectId(id) };
+      const result = await billingListCollection.deleteOne(query);
       res.send(result);
     });
   } finally {
