@@ -97,6 +97,12 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+    // post all billing-list
+    app.post("/billing-list", verifyJWT, async (req, res) => {
+      const billingInfo = req.body;
+      const result = await billingListCollection.insertOne(billingInfo);
+      res.send(result);
+    });
   } finally {
     // await client.close();
   }
