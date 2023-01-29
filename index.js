@@ -15,7 +15,7 @@ function verifyJWT(req, res, next) {
     return res.status(401).send({ message: "Unauthorize access" });
   }
   const token = authHeader.split(" ")[1];
-  jwt.verify(token, process.env.ASSESS_TOKEN_SECRET, function (err, decoded) {
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
     if (err) {
       return res.status(403).send({ message: "Forbidden assess" });
     }
@@ -37,10 +37,59 @@ async function run() {
     await client.connect();
     const database = client.db("powerHack");
     const billingListCollection = database.collection("billing-list");
-    // Query for a movie that has the title 'The Room'
+    const usersCollection = database.collection("users");
 
-    /* ----------- get api create --------*/
+    /* ----------- api create --------*/
+    // registration
+    app.post("/registration", async (req, res) => {
+      const userData = req.body;
+      const query = { email: userData.email };
+      const isEmailExist = await usersCollection.findOne(query);
 
+      if (isEmailExist === null) {
+        const result = await usersCollection.insertOne(userData);
+        // create token
+        const accessToken = jwt.sign(
+          { email: userData.email },
+          process.env.ACCESS_TOKEN_SECRET,
+          {
+            expiresIn: "1d",
+          }
+        );
+        // registration successfully
+        if (result.acknowledged) {
+          res.send({ accessToken: accessToken, user: userData });
+        } else {
+          res.send({ errorMessage: "registration failed" });
+        }
+      } else {
+        res.send({ errorMessage: "email address already exist" });
+      }
+    });
+    // login
+    app.post("/login", async (req, res) => {
+      const userData = req.body;
+      const query = { email: userData.email };
+      const result = await usersCollection.findOne(query);
+
+      if (
+        result.email === userData.email &&
+        result.password === userData.password
+      ) {
+        // create token
+        const accessToken = jwt.sign(
+          { email: userData.email },
+          process.env.ACCESS_TOKEN_SECRET,
+          {
+            expiresIn: "1d",
+          }
+        );
+        // login successfully
+        res.send({ accessToken: accessToken, user: result });
+      } else {
+        res.send({ errorMessage: "email address and password does not match" });
+      }
+    });
     // get all billing-list
     app.get("/billing-list", verifyJWT, async (req, res) => {
       const query = {};
